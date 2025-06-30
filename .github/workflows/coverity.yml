@@ -60,14 +60,15 @@ jobs:
         run: |
           cd build
           ls -la
-      #    tar -czvf cov-int.tgz cov-int
-      #- name: Submit Coverity results for analysis
-      #  run: |
-      #    cd build
-      #    curl \
-      #      --form token="${{ secrets.COVERITY_TOKEN }}" \
-      #      --form email="${{ secrets.COVERITY_EMAIL }}" \
-      #     --form file=@cov-int.tgz \
-      #      --form version="${GITHUB_SHA}" \
-      #      --form description="" \
-      #        "https://scan.coverity.com/builds?project=${{env.COVERITY_PROJECT}}"
+          ls -la cov-int
+          tar -czvf cov-int.tgz cov-int
+      - name: Submit Coverity results for analysis
+        run: |
+          cd build
+          curl \
+            --form token="${{secrets.COVERITY_TOKEN}}" \
+            --form email="${{secrets.COVERITY_EMAIL}}" \
+            --form file=@cov-int.tgz \
+            --form version="${GITHUB_SHA}" \
+            --form description="" \
+            "https://scan.coverity.com/builds?project=${{env.COVERITY_PROJECT}}"
