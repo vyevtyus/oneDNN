@@ -45,19 +45,21 @@ jobs:
             --data "token=${{secrets.COVERITY_TOKEN}}&project=${{env.COVERITY_PROJECT}}"
           ls -la ${GITHUB_WORKSPACE}
           mkdir cov-linux64-tool
-      #    tar -xzf cov-linux64-tool.tar.gz --strip 1 -C cov-linux64-tool
-      #    export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
-      - name: Prepare and build
+          tar -xzf cov-linux64-tool.tar.gz --strip 1 -C cov-linux64-tool
+          export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
+          which cov-build
+      - name: Prepare and run Coverity build
         run: |
           export CC=gcc
           export CXX=g++
           mkdir -p build && cd build
           cmake ..
-          cmake --build . --parallel $(nproc)
-          ctest
-      #- name: Archive Coverity build results
-      #  run: |
-      #    cd build
+          cov-build --dir cov-int cmake --build . --parallel $(nproc)
+      #    ctest
+      - name: Archive Coverity build results
+        run: |
+          cd build
+          ls -la
       #    tar -czvf cov-int.tgz cov-int
       #- name: Submit Coverity results for analysis
       #  run: |
