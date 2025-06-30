@@ -21,7 +21,9 @@ on:
 
 # Only run on push to master branch
   push:
-    branches: [main]
+    branches: [dev/vyevtyus/coverity_scan_enabling]
+  workflow_dispatch:
+
 
 permissions: read-all
 
