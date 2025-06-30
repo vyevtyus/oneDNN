@@ -40,11 +40,13 @@ jobs:
       - uses: actions/checkout@v4
       - name: Download Linux 64 Coverity Tool
         run: |
+          pwd
           curl https://scan.coverity.com/download/cxx/linux64 --output ${GITHUB_WORKSPACE}/cov-linux64-tool.tar.gz \
             --data "token=${{secrets.COVERITY_TOKEN}}&project=${{env.COVERITY_PROJECT}}"
+          ls -la ${GITHUB_WORKSPACE}
           mkdir cov-linux64-tool
-          tar -xzf cov-linux64-tool.tar.gz --strip 1 -C cov-linux64-tool
-          export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
+      #    tar -xzf cov-linux64-tool.tar.gz --strip 1 -C cov-linux64-tool
+      #    export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
       - name: Prepare and build
         run: |
           export CC=gcc
