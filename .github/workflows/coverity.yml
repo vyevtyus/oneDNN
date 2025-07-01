@@ -84,5 +84,5 @@ jobs:
           echo "build_id: ${build_id}"
           curl -X PUT \
             --header 'Content-Type: application/json' \
-            --upload-file full/path/to/tarball \
+            --upload-file cov-int.tgz \
             $upload_url
