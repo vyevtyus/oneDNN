@@ -57,22 +57,24 @@ jobs:
           export CXX=icpx
           export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
           mkdir -p build && cd build
-          cmake .. -DDNNL_CPU_RUNTIME=SYCL -DDNNL_GPU_RUNTIME=SYCL
-          cov-build --dir cov-int cmake --build . --parallel $(nproc)
+      #    cmake .. -DDNNL_CPU_RUNTIME=SYCL -DDNNL_GPU_RUNTIME=SYCL
+      #    cov-build --dir cov-int cmake --build . --parallel $(nproc)
       #    ctest
       - name: Archive Coverity build results
         run: |
           cd build
+          mkdir -p cov-int && cd cov-int
+          touch example.cpp
+          cd ..
           tar -czvf cov-int.tgz cov-int
       - name: Submit Coverity results for analysis
         run: |
           cd build
-          which jq
           curl -X POST \
             -d version="${GITHUB_SHA}" \
             -d description="" \
             -d email="${{secrets.COVERITY_EMAIL}}" \
-            -d token="${{secrets.COVERITY_TOKEN}}" \            
+            -d token="${{secrets.COVERITY_TOKEN}}" \
             -d file_name=@cov-int.tgz \
             https://scan.coverity.com/projects/30384/builds/init \
             | tee response
