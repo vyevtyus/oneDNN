@@ -40,35 +40,47 @@ jobs:
       - uses: actions/checkout@v4
       - name: Download Linux 64 Coverity Tool
         run: |
-          pwd
+          echo "pwd: " && pwd
           curl https://scan.coverity.com/download/cxx/linux64 --output ${GITHUB_WORKSPACE}/cov-linux64-tool.tar.gz \
             --data "token=${{secrets.COVERITY_TOKEN}}&project=${{env.COVERITY_PROJECT}}"
-          ls -la ${GITHUB_WORKSPACE}
+          echo "GITHUB_WORKSPACE: ${GITHUB_WORKSPACE}"
           mkdir cov-linux64-tool
           tar -xzf cov-linux64-tool.tar.gz --strip 1 -C cov-linux64-tool
+      - name: Download Intel compiler
+        run: |
+          wget --progress=dot:giga https://registrationcenter-download.intel.com/akdlm/IRC_NAS/cd63be99-88b0-4981-bea1-2034fe17f5cf/intel-dpcpp-cpp-compiler-2025.1.0.573_offline.sh
+          sudo bash intel-dpcpp-cpp-compiler-2025.1.0.573_offline.sh -s -a -s --action install --eula accept
       - name: Prepare and run Coverity build
         run: |
-          export CC=gcc
-          export CXX=g++
+          source /opt/intel/oneapi/setvars.sh
+          export CC=icx
+          export CXX=icpx
           export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
-          which cov-build
           mkdir -p build && cd build
-          cmake ..
+          cmake .. -DDNNL_CPU_RUNTIME=SYCL -DDNNL_GPU_RUNTIME=SYCL
           cov-build --dir cov-int cmake --build . --parallel $(nproc)
       #    ctest
       - name: Archive Coverity build results
         run: |
           cd build
-          ls -la
-          ls -la cov-int
           tar -czvf cov-int.tgz cov-int
       - name: Submit Coverity results for analysis
         run: |
           cd build
-          curl \
-            --form token="${{secrets.COVERITY_TOKEN}}" \
-            --form email="${{secrets.COVERITY_EMAIL}}" \
-            --form file=@cov-int.tgz \
-            --form version="${GITHUB_SHA}" \
-            --form description="" \
-            "https://scan.coverity.com/builds?project=${{env.COVERITY_PROJECT}}"
+          which jq
+          curl -X POST \
+            -d version="${GITHUB_SHA}" \
+            -d description="" \
+            -d email="${{secrets.COVERITY_EMAIL}}" \
+            -d token="${{secrets.COVERITY_TOKEN}}" \            
+            -d file_name=@cov-int.tgz \
+            https://scan.coverity.com/projects/30384/builds/init \
+            | tee response
+          upload_url=$(jq -r '.url' response)
+          echo "upload_url: ${upload_url}"
+          build_id=$(jq -r '.build_id' response)
+          echo "build_id: ${build_id}"
+          curl -X PUT \
+            --header 'Content-Type: application/json' \
+            --upload-file full/path/to/tarball \
+            $upload_url
