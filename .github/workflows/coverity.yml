@@ -55,19 +55,19 @@ jobs:
           export CXX=icpx
           export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
           cov-configure --template --compiler icx --comptype intel_icx:linux
-      #     mkdir -p build && cd build
-      #     cmake .. -DDNNL_CPU_RUNTIME=SYCL -DDNNL_GPU_RUNTIME=SYCL
-      #     cov-build --dir cov-int cmake --build . --parallel $(nproc)
-      # #    ctest
-      # - name: Archive Coverity build results
-      #   run: |
-      #     cd build
-      #     tar -czvf cov-int.tgz cov-int
-      # - name: Upload Coverity build results
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: cov-int
-      #     path: ./build/cov-int.tgz
+          mkdir -p build && cd build
+          cmake .. -DDNNL_CPU_RUNTIME=SYCL -DDNNL_GPU_RUNTIME=SYCL
+          cov-build --dir cov-int cmake --build . --parallel $(nproc)
+      #    ctest
+      - name: Archive Coverity build results
+        run: |
+          cd build
+          tar -czvf cov-int.tgz cov-int
+      - name: Upload Coverity build results
+        uses: actions/upload-artifact@v4
+        with:
+          name: cov-int
+          path: ./build/cov-int.tgz
       # - name: Submit Coverity results for analysis
       #   run: |
       #     cd build
