@@ -48,14 +48,15 @@ jobs:
         run: |
           wget --progress=dot:giga https://registrationcenter-download.intel.com/akdlm/IRC_NAS/cd63be99-88b0-4981-bea1-2034fe17f5cf/intel-dpcpp-cpp-compiler-2025.1.0.573_offline.sh
           sudo bash intel-dpcpp-cpp-compiler-2025.1.0.573_offline.sh -s -a -s --action install --eula accept
-          ls -la /opt/intel/oneapi/
+          ls -la /opt/intel/oneapi/common
+          ls -la /opt/intel/oneapi/compiler
       - name: Prepare and run Coverity build
         run: |
           source /opt/intel/oneapi/setvars.sh
           export CC=icx
           export CXX=icpx
           export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
-          cov-configure --comptype intel_icx:linux --compiler /opt/intel/oneapi/bin/icx
+          cov-configure --comptype intel_icx:linux --compiler /opt/intel/oneapi/compiler/2025.1.0/linux/bin/icx
           mkdir -p build && cd build
       #     cmake .. -DDNNL_CPU_RUNTIME=SYCL -DDNNL_GPU_RUNTIME=SYCL
       #     cov-build --dir cov-int cmake --build . --parallel $(nproc)
