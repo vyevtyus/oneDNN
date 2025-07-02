@@ -48,7 +48,7 @@ jobs:
         run: |
           wget --progress=dot:giga https://registrationcenter-download.intel.com/akdlm/IRC_NAS/cd63be99-88b0-4981-bea1-2034fe17f5cf/intel-dpcpp-cpp-compiler-2025.1.0.573_offline.sh
           sudo bash intel-dpcpp-cpp-compiler-2025.1.0.573_offline.sh -s -a -s --action install --eula accept
-          ls -la /opt/intel/oneapi/compiler/latest
+          ls -la /opt/intel/oneapi/compiler/latest/
       - name: Prepare and run Coverity build
         run: |
           source /opt/intel/oneapi/setvars.sh
@@ -57,15 +57,20 @@ jobs:
           export CXX=icpx
           env
           export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
-          cov-configure --comptype intel_icx:linux --compiler /opt/intel/oneapi/compiler/latest/linux/bin/icx
+          cov-configure --comptype intel_icx:linux --compiler /opt/intel/oneapi/compiler/latest/bin/icx
           mkdir -p build && cd build
-      #     cmake .. -DDNNL_CPU_RUNTIME=SYCL -DDNNL_GPU_RUNTIME=SYCL
-      #     cov-build --dir cov-int cmake --build . --parallel $(nproc)
-      # #    ctest
-      # - name: Archive Coverity build results
-      #   run: |
-      #     cd build
-      #     tar -czvf cov-int.tgz cov-int
+          cmake .. -DDNNL_CPU_RUNTIME=SYCL -DDNNL_GPU_RUNTIME=SYCL
+          cov-build --dir cov-int cmake --build . --parallel $(nproc)
+      #    ctest
+      - name: Archive Coverity build results
+        run: |
+          cd build
+          tar -czvf cov-int.tgz cov-int
+      - name: Upload Coverity build results
+        uses: actions/upload-artifact@v4
+        with:
+          name: cov-int
+          path: ./build/cov-int.tgz
       # - name: Submit Coverity results for analysis
       #   run: |
       #     cd build
