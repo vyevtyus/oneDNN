@@ -54,7 +54,7 @@ jobs:
           export CC=icx
           export CXX=icpx
           export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
-          cov-configure --template --compiler /opt/intel/oneapi/compiler/latest/bin/icx --comptype intel_icx:linux
+          cov-configure --template --compiler icx --comptype intel_icx:linux
       #     mkdir -p build && cd build
       #     cmake .. -DDNNL_CPU_RUNTIME=SYCL -DDNNL_GPU_RUNTIME=SYCL
       #     cov-build --dir cov-int cmake --build . --parallel $(nproc)
