@@ -28,7 +28,7 @@ on:
 permissions: read-all
 
 env:
-  BUILD_CONCURRENCY: 4
+  BUILD_CONCURRENCY: ${{runner.cores}}
   COVERITY_PROJECT: vyevtyus%2FoneDNN
 
 jobs:
@@ -41,7 +41,9 @@ jobs:
       - name: Download Linux 64 Coverity Tool
         run: |
           echo "nproc: "
-          $(nproc)
+          nproc
+          echo "runner.cores: "
+          ${{env.BUILD_CONCURRENCY}}
       #     curl --fail https://scan.coverity.com/download/cxx/linux64 --output ${GITHUB_WORKSPACE}/cov-linux64-tool.tar.gz \
       #       --data "token=${{secrets.COVERITY_TOKEN}}&project=${{env.COVERITY_PROJECT}}" || { echo "Download failed"; exit 1; }
       #     mkdir cov-linux64-tool
