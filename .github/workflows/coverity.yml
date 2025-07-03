@@ -39,43 +39,58 @@ jobs:
       - uses: actions/checkout@v4
       - name: Download Linux 64 Coverity Tool
         run: |
-          echo "Executing: cov-build --dir cov-int cmake --build . --parallel $(nproc)"
-      #     curl --fail https://scan.coverity.com/download/cxx/linux64 --output ${GITHUB_WORKSPACE}/cov-linux64-tool.tar.gz \
-      #       --data "token=${{secrets.COVERITY_TOKEN}}&project=${{env.COVERITY_PROJECT}}" || { echo "Download failed"; exit 1; }
-      #     mkdir cov-linux64-tool
-      #     tar -xzf cov-linux64-tool.tar.gz --strip 1 -C cov-linux64-tool
-      # - name: Prepare and run Coverity build
-      #   run: |
-      #     export CC=gcc
-      #     export CXX=g++
-      #     export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
-      #     mkdir -p build && cd build
-      #     cmake ..
-      #     cov-build --dir cov-int cmake --build . --parallel $(nproc)
-      # #    ctest
-      # - name: Archive Coverity build results
-      #   run: |
-      #     cd build
-      #     tar -czvf cov-int.tgz cov-int
-      # - name: Upload Coverity build results
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: cov-int
-      #     path: ./build/cov-int.tgz
-      # - name: Submit Coverity results for analysis
-      #   run: |
-      #     cd build
-      #     curl -X POST \
-      #       -d version="${GITHUB_SHA}" \
-      #       -d description="" \
-      #       -d email="${{secrets.COVERITY_EMAIL}}" \
-      #       -d token="${{secrets.COVERITY_TOKEN}}" \
-      #       -d file_name=@cov-int.tgz \
-      #       https://scan.coverity.com/projects/30384/builds/init \
-      #       | tee response
-      #     upload_url=$(jq -r '.url' response)
-      #     build_id=$(jq -r '.build_id' response)
-      #     curl -X PUT \
-      #       --header 'Content-Type: application/json' \
-      #       --upload-file cov-int.tgz \
-      #       $upload_url
+          curl --fail https://scan.coverity.com/download/cxx/linux64 --output ${GITHUB_WORKSPACE}/cov-linux64-tool.tar.gz \
+            --data "token=${{secrets.COVERITY_TOKEN}}&project=${{env.COVERITY_PROJECT}}" || { echo "Download failed"; exit 1; }
+          mkdir cov-linux64-tool
+          tar -xzf cov-linux64-tool.tar.gz --strip 1 -C cov-linux64-tool
+      - name: Prepare and run Coverity build
+        run: |
+          export CC=gcc
+          export CXX=g++
+          export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
+          mkdir -p build && cd build
+          cmake ..
+          cov-build --dir cov-int cmake --build . --parallel $(nproc)
+      #    ctest
+      - name: Archive Coverity build results
+        id: check_size
+        run: |
+          cd build
+          tar -czvf cov-int.tgz cov-int
+          size=$(du -m cov-int.tgz | cut -f1)
+          echo "Artifact size: $size MB"
+          echo "size=$size" >> $GITHUB_OUTPUT
+      - name: Upload Coverity build results
+        uses: actions/upload-artifact@v4
+        with:
+          name: cov-int
+          path: ./build/cov-int.tgz
+      - name: Submit Coverity results for analysis
+        if: ${{steps.check_size.outputs.size <= 500}}
+        run: |
+          cd build
+          curl \
+            --form token="${{secrets.COVERITY_TOKEN}}" \
+            --form email="${{secrets.COVERITY_EMAIL}}" \
+            --form file=@cov-int.tgz \
+            --form version="${GITHUB_SHA}" \
+            --form description="" \
+            "https://scan.coverity.com/builds?project=${{env.COVERITY_PROJECT}}"
+      - name: Submit Coverity results for analysis
+        if: ${{steps.check_size.outputs.size > 500}}
+        run: |
+          cd build
+          curl -X POST \
+            -d version="${GITHUB_SHA}" \
+            -d description="" \
+            -d email="${{secrets.COVERITY_EMAIL}}" \
+            -d token="${{secrets.COVERITY_TOKEN}}" \
+            -d file_name=@cov-int.tgz \
+            https://scan.coverity.com/projects/30384/builds/init \
+            | tee response
+          upload_url=$(jq -r '.url' response)
+          build_id=$(jq -r '.build_id' response)
+          curl -X PUT \
+            --header 'Content-Type: application/json' \
+            --upload-file cov-int.tgz \
+            $upload_url
