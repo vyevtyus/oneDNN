@@ -18,31 +18,30 @@
 name: Coverity Scan
 
 on:
-
-# Only run on push to master branch
-  push:
-    branches: [dev/vyevtyus/coverity_scan_enabling]
-  workflow_dispatch:
-
+  schedule:
+    #* set to run each Friday at 12:00 UCT
+    - cron: '0 12 * * 5'
 
 permissions: read-all
 
 env:
-  COVERITY_PROJECT: vyevtyus%2FoneDNN
+  COVERITY_PROJECT: oneapi-src%2FoneDNN
 
 jobs:
   coverity_linux:
     name: Coverity Linux
-    if: github.repository == 'vyevtyus/oneDNN'
+    if: github.repository == 'uxlfoundation/oneDNN'
     runs-on: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v4
-      - name: Download Linux 64 Coverity Tool
+
+      - name: Download Coverity Build Tool (linux64)
         run: |
           curl --fail https://scan.coverity.com/download/cxx/linux64 --output ${GITHUB_WORKSPACE}/cov-linux64-tool.tar.gz \
             --data "token=${{secrets.COVERITY_TOKEN}}&project=${{env.COVERITY_PROJECT}}" || { echo "Download failed"; exit 1; }
           mkdir cov-linux64-tool
           tar -xzf cov-linux64-tool.tar.gz --strip 1 -C cov-linux64-tool
+
       - name: Prepare and run Coverity build
         run: |
           export CC=gcc
@@ -51,7 +50,7 @@ jobs:
           mkdir -p build && cd build
           cmake ..
           cov-build --dir cov-int cmake --build . --parallel $(nproc)
-      #    ctest
+
       - name: Archive Coverity build results
         id: check_size
         run: |
@@ -60,12 +59,9 @@ jobs:
           size=$(du -m cov-int.tgz | cut -f1)
           echo "Artifact size: $size MB"
           echo "size=$size" >> $GITHUB_OUTPUT
-      - name: Upload Coverity build results
-        uses: actions/upload-artifact@v4
-        with:
-          name: cov-int
-          path: ./build/cov-int.tgz
+
       - name: Submit Coverity results for analysis
+        #* if condition is related to Coverity limitation for archives that exceed 500MB
         if: ${{steps.check_size.outputs.size <= 500}}
         run: |
           cd build
@@ -76,6 +72,7 @@ jobs:
             --form version="${GITHUB_SHA}" \
             --form description="" \
             "https://scan.coverity.com/builds?project=${{env.COVERITY_PROJECT}}"
+
       - name: Submit Coverity results for analysis
         if: ${{steps.check_size.outputs.size > 500}}
         run: |
