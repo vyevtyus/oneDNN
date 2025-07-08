@@ -18,6 +18,7 @@
 name: Coverity Scan
 
 on:
+  workflow_dispatch:
   schedule:
     #* set to run each Friday at 12:00 UCT
     - cron: '0 12 * * 5'
