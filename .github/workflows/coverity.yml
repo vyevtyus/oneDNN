@@ -29,6 +29,7 @@ permissions: read-all
 
 env:
   COVERITY_PROJECT: vyevtyus%2FoneDNN
+  COVERITY_PROJECT_ID: 30384
 
 jobs:
   coverity_linux:
@@ -55,7 +56,6 @@ jobs:
           cov-build --dir cov-int cmake --build . --parallel $(nproc)
 
       - name: Archive Coverity build results
-        id: check_size
         run: |
           cd build
           tar -czvf cov-int.tgz cov-int
@@ -63,27 +63,7 @@ jobs:
           echo "Artifact size: $size MB"
           echo "size=$size" >> $GITHUB_OUTPUT
 
-      - name: Upload Coverity build results
-        uses: actions/upload-artifact@v4
-        with:
-          name: cov-int
-          path: ./build/cov-int.tgz
-
       - name: Submit Coverity results for analysis
-        #* if condition is related to Coverity limitation for archives that exceed 500MB
-        if: ${{steps.check_size.outputs.size <= 500}}
-        run: |
-          cd build
-          curl \
-            --form token="${{secrets.COVERITY_TOKEN}}" \
-            --form email="${{secrets.COVERITY_EMAIL}}" \
-            --form file=@cov-int.tgz \
-            --form version="${GITHUB_SHA}" \
-            --form description="" \
-            "https://scan.coverity.com/builds?project=${{env.COVERITY_PROJECT}}"
-
-      - name: Submit Coverity results for analysis
-        if: ${{steps.check_size.outputs.size > 500}}
         run: |
           cd build
           curl -X POST \
@@ -92,10 +72,20 @@ jobs:
             -d email="${{secrets.COVERITY_EMAIL}}" \
             -d token="${{secrets.COVERITY_TOKEN}}" \
             -d file_name=@cov-int.tgz \
-            https://scan.coverity.com/projects/30384/builds/init \
+            https://scan.coverity.com/projects/${{env.COVERITY_PROJECT_ID}}/builds/init \
             | tee response
           upload_url=$(jq -r '.url' response)
+          if [ -z "$upload_url" ] || [ "$upload_url" == "null" ]; then
+            echo "Error: Failed to extract 'url' from API response." >&2
+            cat response >&2
+            exit 1
+          fi
           build_id=$(jq -r '.build_id' response)
+          # Validate that the upload_url belongs to scan.coverity.com
+          if ! echo "$upload_url" | grep -q '^https://scan.coverity.com/'; then
+            echo "Error: Invalid upload URL. Expected domain: scan.coverity.com"
+            exit 1
+          fi
           curl -X PUT \
             --header 'Content-Type: application/json' \
             --upload-file cov-int.tgz \
