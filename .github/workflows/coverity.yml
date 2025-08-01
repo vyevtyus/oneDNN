@@ -19,7 +19,7 @@ name: Coverity Scan
 
 on:
   push:
-    branches: [dev/vyevtyus/coverity_enabling_debug]
+    branches: [dev/vyevtyus/dev/vyevtyus/coverity_scan_enabling_debug]
   #* allows this workflow to be invoked by another workflow
   workflow_call:
   #* allows manual trigger of workflow when needed
