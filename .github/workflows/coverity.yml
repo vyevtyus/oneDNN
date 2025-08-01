@@ -46,13 +46,20 @@ jobs:
           mkdir cov-linux64-tool
           tar -xzf cov-linux64-tool.tar.gz --strip 1 -C cov-linux64-tool
 
+      - name: Download Intel compiler
+        run: |
+          wget --progress=dot:giga https://registrationcenter-download.intel.com/akdlm/IRC_NAS/cd63be99-88b0-4981-bea1-2034fe17f5cf/intel-dpcpp-cpp-compiler-2025.1.0.573_offline.sh
+          sudo bash intel-dpcpp-cpp-compiler-2025.1.0.573_offline.sh -s -a -s --action install --eula accept
+
       - name: Prepare and run Coverity build
         run: |
-          export CC=gcc
-          export CXX=g++
+          source /opt/intel/oneapi/setvars.sh
+          export CC=icx
+          export CXX=icpx
           export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
+          cov-configure --template --compiler icx --comptype intel_icx:linux
           mkdir -p build && cd build
-          cmake ..
+          cmake .. -DDNNL_CPU_RUNTIME=SYCL -DDNNL_GPU_RUNTIME=SYCL
           cov-build --dir cov-int cmake --build . --parallel $(nproc)
 
       - name: Archive Coverity build results
@@ -63,25 +70,25 @@ jobs:
           echo "Artifact size: $size MB"
           echo "size=$size" >> $GITHUB_OUTPUT
 
-      - name: Submit Coverity results for analysis
-        run: |
-          cd build
-          curl -X POST \
-            -d version="${GITHUB_SHA}" \
-            -d description="" \
-            -d email="${{secrets.COVERITY_EMAIL}}" \
-            -d token="${{secrets.COVERITY_TOKEN}}" \
-            -d file_name=@cov-int.tgz \
-            https://scan.coverity.com/projects/${{env.COVERITY_PROJECT_ID}}/builds/init \
-            | tee response
-          upload_url=$(jq -r '.url' response)
-          if [ -z "$upload_url" ] || [ "$upload_url" == "null" ]; then
-            echo "Error: Failed to extract 'url' from API response." >&2
-            cat response >&2
-            exit 1
-          fi
-          build_id=$(jq -r '.build_id' response)
-          curl -X PUT \
-            --header 'Content-Type: application/json' \
-            --upload-file cov-int.tgz \
-            $upload_url
+      # - name: Submit Coverity results for analysis
+      #   run: |
+      #     cd build
+      #     curl -X POST \
+      #       -d version="${GITHUB_SHA}" \
+      #       -d description="" \
+      #       -d email="${{secrets.COVERITY_EMAIL}}" \
+      #       -d token="${{secrets.COVERITY_TOKEN}}" \
+      #       -d file_name=@cov-int.tgz \
+      #       https://scan.coverity.com/projects/${{env.COVERITY_PROJECT_ID}}/builds/init \
+      #       | tee response
+      #     upload_url=$(jq -r '.url' response)
+      #     if [ -z "$upload_url" ] || [ "$upload_url" == "null" ]; then
+      #       echo "Error: Failed to extract 'url' from API response." >&2
+      #       cat response >&2
+      #       exit 1
+      #     fi
+      #     build_id=$(jq -r '.build_id' response)
+      #     curl -X PUT \
+      #       --header 'Content-Type: application/json' \
+      #       --upload-file cov-int.tgz \
+      #       $upload_url
