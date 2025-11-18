@@ -37,8 +37,8 @@ on:
 permissions: read-all
 
 env:
-  COVERITY_PROJECT: uxlfoundation%2FoneDNN
-  COVERITY_PROJECT_ID: 32045
+  COVERITY_PROJECT: vyevtyus%2FoneDNN
+  COVERITY_PROJECT_ID: 30384
 
 jobs:
   coverity_linux:
