@@ -17,11 +17,19 @@
 
 name: Coverity Scan
 
+# on:
+#   schedule:
+#     #* set to run each Friday at 12:00 UTC
+#     - cron: '0 12 * * 5'
+#   #* allows this workflow to be invoked by another workflow
+#   workflow_call:
+#   #* allows manual trigger of workflow when needed
+#   workflow_dispatch:
+
 on:
-  schedule:
-    #* set to run each Friday at 12:00 UTC
-    - cron: '0 12 * * 5'
-  #* allows this workflow to be invoked by another workflow
+# Only run on push to main branch
+  push:
+    branches: [dev/vyevtyus/coverity_in_pcm_enabling]
   workflow_call:
   #* allows manual trigger of workflow when needed
   workflow_dispatch:
@@ -63,6 +71,12 @@ jobs:
           size=$(du -m cov-int.tgz | cut -f1)
           echo "Artifact size: $size MB"
           echo "size=$size" >> $GITHUB_OUTPUT
+
+      - name: Cache build archive
+        uses: actions/cache@v4
+        with:
+          path: cov-int.tgz
+          key: oneDNN-cov-build
 
       - name: Submit Coverity results for analysis
         run: |

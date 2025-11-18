@@ -1,0 +1,65 @@
+# *******************************************************************************
+# Copyright 2024-2025 Arm Limited and affiliates.
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# *******************************************************************************
+
+name: Coverity Scan (PCm)
+
+on:
+  pull_request:
+    branches: [dev/vyevtyus/coverity_in_pcm_enabling_]
+    #* Fires when new commits are pushed to the PR
+    types: [opened, synchronize]
+  #* allows this workflow to be invoked by another workflow
+  workflow_call:
+  #* allows manual trigger of workflow when needed
+  workflow_dispatch:
+
+permissions: read-all
+
+env:
+  COVERITY_PROJECT: vyevtyus%2FoneDNN
+
+jobs:
+  coverity_pcm_lnx:
+    name: Coverity Linux
+    if: github.repository == 'vyevtyus/oneDNN'
+    runs-on: [ubuntu-latest]
+    cache-exists: ${{ steps.check.outputs.exists }}
+    steps:
+      - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+
+      - name: Restore oneDNN latest build from cache
+        uses: actions/cache@v4
+        with:
+          path: build.tar.gz
+          key: oneDNN-cov-build
+
+      - name: Download Coverity Build Tool (linux64)
+        run: |
+          curl --fail https://scan.coverity.com/download/cxx/linux64 --output ${GITHUB_WORKSPACE}/cov-linux64-tool.tar.gz \
+            --data "token=${{secrets.COVERITY_TOKEN}}&project=${{env.COVERITY_PROJECT}}" || { echo "Download failed"; exit 1; }
+          mkdir cov-linux64-tool
+          tar -xzf cov-linux64-tool.tar.gz --strip 1 -C cov-linux64-tool
+
+      - name: Post-run checks
+        run: |
+          ls -la .
+          if [ -f cov-int.tgz ]; then
+              tar -xzf cov-int.tgz
+          else
+              echo "❌ Build archive not found"
+          fi
+          ls -la
