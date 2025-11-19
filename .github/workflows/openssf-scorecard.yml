@@ -32,6 +32,7 @@ permissions: read-all
 jobs:
   analysis:
     name: Scorecard analysis
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-latest
     permissions:
       # Needed to upload the results to code-scanning dashboard.

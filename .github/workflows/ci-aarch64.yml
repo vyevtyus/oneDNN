@@ -74,6 +74,7 @@ jobs:
           { name: onednn-perf-new, build: Release, testset: SMOKE }
         ]
     name: build ${{ matrix.config.name }}
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-22.04-arm
     steps:
       - name: Checkout oneDNN
@@ -109,6 +110,7 @@ jobs:
         ]
 
     name: ${{ matrix.config.name }}, ${{ matrix.config.toolset }}, ${{ matrix.config.threading }}, ${{ matrix.config.build }}
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ${{ matrix.config.label }}
     steps:
       - name: Checkout oneDNN
@@ -175,6 +177,7 @@ jobs:
         ]
 
     name: ${{ matrix.config.name }} unit test
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ${{ matrix.config.label }}
     steps:
       - name: Checkout oneDNN
@@ -230,6 +233,7 @@ jobs:
 
     name: ${{ matrix.config.name }} perf test
     runs-on: ${{ matrix.config.label }}
+    if: github.repository == 'uxlfoundaton/oneDNN'
     steps:
       - name: Checkout oneDNN
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -303,6 +307,7 @@ jobs:
   windows:
     name: build windows-msvc 
     runs-on: windows-11-arm
+    if: github.repository == 'uxlfoundaton/oneDNN'
     steps:
       - name: Checkout oneDNN
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
@@ -325,6 +330,7 @@ jobs:
   status:
     needs: [smoke-test, unit-test, perf-test, windows]
     runs-on: ubuntu-latest
+    if: github.repository == 'uxlfoundaton/oneDNN'
     name: "CI AArch64"
     steps:
       - name: Print success

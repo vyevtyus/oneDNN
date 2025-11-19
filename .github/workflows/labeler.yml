@@ -22,6 +22,7 @@ permissions: read-all
 
 jobs:
   label:
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-latest
     permissions:
       contents: read

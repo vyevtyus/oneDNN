@@ -61,6 +61,7 @@ jobs:
         ]
 
     name: Clang-Tidy - ${{matrix.config.arch}}
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ${{matrix.config.label}}
     steps:
       - name: Checkout oneDNN
