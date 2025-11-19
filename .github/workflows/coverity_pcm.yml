@@ -44,7 +44,10 @@ jobs:
         uses: actions/cache@v4
         with:
           path: build.tar.gz
-          key: oneDNN-cov-build
+          key: oneDNN-cov-build-${{github.sha}}
+          restore-keys: |
+            oneDNN-cov-build-
+
 
       - name: Download Coverity Build Tool (linux64)
         run: |
