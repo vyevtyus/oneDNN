@@ -19,13 +19,13 @@ name: Coverity Scan (PCm)
 
 on:
   pull_request:
-    branches: [main]
-    #* Fires when new commits are pushed to the PR
-    types: [opened, synchronize]
-  #* allows this workflow to be invoked by another workflow
-  workflow_call:
+    types: [opened, synchronize, reopened]
   #* allows manual trigger of workflow when needed
   workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions: read-all
 
