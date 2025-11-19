@@ -19,7 +19,7 @@ name: Coverity Scan (PCm)
 
 on:
   pull_request:
-    branches: [dev/vyevtyus/coverity_in_pcm_enabling]
+    branches: [main]
     #* Fires when new commits are pushed to the PR
     types: [opened, synchronize]
   #* allows this workflow to be invoked by another workflow
