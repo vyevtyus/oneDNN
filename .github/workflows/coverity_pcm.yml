@@ -40,6 +40,8 @@ jobs:
     runs-on: [ubuntu-latest]
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
+        with:
+          fetch-depth: 0
 
       # - name: Restore oneDNN latest build from cache
       #   uses: actions/cache@v4
@@ -62,6 +64,7 @@ jobs:
           export CXX=g++
           export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
 
+          git fetch origin main
           CHANGED_FILES=$(git diff --name-only origin/main...HEAD | grep '\.cpp\|\.c\|\.h')
 
           if [ -z "$CHANGED_FILES" ]; then
