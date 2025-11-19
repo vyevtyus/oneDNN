@@ -19,6 +19,7 @@ name: Coverity Scan (PCm)
 
 on:
   pull_request:
+    branches: [main, dev/vyevtyus/coverity_in_pcm_enabling]
     types: [opened, synchronize, reopened]
   #* allows manual trigger of workflow when needed
   workflow_dispatch:
