@@ -29,7 +29,7 @@ name: Coverity Scan
 on:
 # Only run on push to main branch
   push:
-    branches: [dev/vyevtyus/coverity_in_pcm_enabling]
+    branches: [dev/vyevtyus/coverity_in_pcm_enabling_]
   workflow_call:
   #* allows manual trigger of workflow when needed
   workflow_dispatch:
