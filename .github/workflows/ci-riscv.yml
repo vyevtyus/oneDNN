@@ -68,6 +68,7 @@ jobs:
         ]
 
     name: ${{ matrix.config.name }}, ${{ matrix.config.toolset }}, ${{ matrix.config.threading }}, ${{ matrix.config.build }}
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ${{ matrix.config.label }}
     steps:
       - name: Checkout oneDNN
@@ -138,6 +139,7 @@ jobs:
         ]
 
     name: ${{ matrix.config.name }}, ${{ matrix.config.threading }}
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout oneDNN
@@ -188,6 +190,7 @@ jobs:
   # workflow status and can be used in branch rulesets
   status:
     needs: [build, test]
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-latest
     name: "CI RISC-V"
     steps:

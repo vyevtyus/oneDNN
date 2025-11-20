@@ -41,6 +41,7 @@ jobs:
     uses: ./.github/workflows/performance-aarch64.yml
   
   build:
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-22.04-arm
     steps:
       - name: Checkout oneDNN
@@ -68,6 +69,7 @@ jobs:
         ]
 
     name: ${{ matrix.config.name }}, ${{ matrix.config.toolset }}, ${{ matrix.config.threading }}, ${{ matrix.config.build }}
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ${{ matrix.config.label }}
     permissions:
       contents: write
@@ -168,6 +170,7 @@ jobs:
           in-file: ${{ github.workspace }}/test_results.xml
   
   save-success-hash:
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-latest
     needs: test
     steps:
@@ -190,6 +193,7 @@ jobs:
   #* workflow status and can be used in branch rulesets
   status:
     needs: test
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-latest
     name: "Nightly AArch64"
     steps:

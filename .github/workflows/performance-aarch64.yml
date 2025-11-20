@@ -59,6 +59,7 @@ permissions:
 
 jobs:
   build-oneDNN-base:
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-22.04-arm
     steps:
       - name: Checkout oneDNN
@@ -86,6 +87,7 @@ jobs:
           cache: ${{ inputs.onednn_base_hash == '' && 'true' || 'false'}}
 
   build-oneDNN-new:
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-22.04-arm
     steps:
       - name: Checkout oneDNN
@@ -115,6 +117,7 @@ jobs:
         ]
 
     name: ${{ matrix.config.name }}, ${{ matrix.config.toolset }}, ${{ matrix.config.threading }}, ${{ matrix.config.build }}
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ${{ matrix.config.label }}
     permissions:
       contents: write
@@ -208,6 +211,7 @@ jobs:
   #* workflow status and can be used in branch rulesets
   status:
     needs: build-and-test-performance
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-latest
     name: "Nightly Performance AArch64"
     steps:

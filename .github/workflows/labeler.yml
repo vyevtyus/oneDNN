@@ -15,13 +15,14 @@
 #===============================================================================
 
 name: Labeler
-on: [pull_request_target]
+# on: [pull_request_target]
 
 # Declare default permissions as read only.
 permissions: read-all
 
 jobs:
   label:
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-latest
     permissions:
       contents: read

@@ -33,6 +33,7 @@ concurrency:
 jobs:
   pr-commits:
     name: Commit messages
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -44,6 +45,7 @@ jobs:
 
   pr-header-guards:
     name: Header guards
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -55,6 +57,7 @@ jobs:
 
   pr-clang-format:
     name: Clang-Format
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-22.04
     steps:
       - name: Checkout
@@ -68,6 +71,7 @@ jobs:
 
   pr-format-tags:
     name: Format tags consistency
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout oneDNN
@@ -102,6 +106,7 @@ jobs:
 
   pr-status:
     name: Formatting
+    if: github.repository == 'uxlfoundaton/oneDNN'
     runs-on: ubuntu-latest
     needs: [ pr-commits, pr-clang-format, pr-format-tags ]
     steps:
