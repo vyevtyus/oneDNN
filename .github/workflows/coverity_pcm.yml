@@ -98,6 +98,7 @@ jobs:
 
       - name: Post-run checks
         run: |
+          cd build
           if [ -f cov-int.tgz ]; then
               tar -xzf cov-int.tgz
           else
