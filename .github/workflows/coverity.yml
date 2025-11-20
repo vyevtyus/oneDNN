@@ -29,7 +29,7 @@ name: Coverity Scan
 on:
 # Only run on push to main branch
   push:
-    branches: [dev/vyevtyus/coverity_in_pcm_enabling_]
+    branches: [dev/vyevtyus/coverity_in_pcm_enabling]
   workflow_call:
   #* allows manual trigger of workflow when needed
   workflow_dispatch:
@@ -64,10 +64,42 @@ jobs:
           cmake ..
           cov-build --dir cov-int cmake --build . --parallel $(nproc)
 
-      - name: Archive Coverity build results
+      # - name: Run Coverity analysis
+      #   run: |
+      #     cd build
+      #     cov-analyze --dir cov-int --concurrency --security --enable-constraint-fpp --enable-fnptr --enable-virtual
+      #       --disable ASSERT_SIDE_EFFECT
+      #       --disable AUTO_CAUSES_COPY
+      #       --disable BAD_CHECK_OF_WAIT_COND
+      #       --disable BAD_SHIFT
+      #       --disable COPY_INSTEAD_OF_MOVE
+      #       --disable CUDA.COLLECTIVE_WARP_SHUFFLE_WIDTH
+      #       --disable CUDA.CUDEVICE_HANDLES
+      #       --disable CUDA.DEVICE_DEPENDENT
+      #       --disable CUDA.DEVICE_DEPENDENT_CALLBACKS
+      #       --disable CUDA.DIVERGENCE_AT_COLLECTIVE_OPERATION
+      #       --disable CUDA.ERROR_INTERFACE
+      #       --disable CUDA.ERROR_KERNEL_LAUNCH
+      #       --disable CUDA.FORK
+      #       --disable CUDA.INACTIVE_THREAD_AT_COLLECTIVE_WARP
+      #       --disable CUDA.INITIATION_OBJECT_DEVICE_THREAD_BLOCK
+      #       --disable CUDA.INVALID_MEMORY_ACCESS
+      #       --disable CUDA.SHARE_FUNCTION
+      #       --disable CUDA.SHARE_OBJECT_STREAM_ASSOCIATED
+      #       --disable CUDA.SPECIFIERS_INCONSISTENCY
+      #       --disable CUDA.SYNCHRONIZE_TERMINATION
+      #       --disable INEFFICIENT_RESERVE
+      #       --disable MISSING_COMMA
+      #       --disable MISSING_MOVE_ASSIGNMENT
+      #       --disable OVERLAPPING_COPY
+      #       --disable STREAM_FORMAT_STATE
+      #       --disable UNINTENDED_INTEGER_DIVISION
+
+      - name: Archive oneDNN build results
         run: |
+          tar -czf build.tgz build
           cd build
-          tar -czvf cov-int.tgz cov-int
+          tar -czf cov-int.tgz cov-int
           size=$(du -m cov-int.tgz | cut -f1)
           echo "Artifact size: $size MB"
           echo "size=$size" >> $GITHUB_OUTPUT
@@ -75,7 +107,7 @@ jobs:
       - name: Cache build archive
         uses: actions/cache@v4
         with:
-          path: build/cov-int.tgz
+          path: build.tgz
           key: oneDNN-cov-build-${{github.sha}}
 
       # - name: Submit Coverity results for analysis

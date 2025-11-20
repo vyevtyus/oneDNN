@@ -40,69 +40,71 @@ jobs:
     runs-on: [ubuntu-latest]
     steps:
       - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
-        with:
-          fetch-depth: 0
 
       - name: Restore oneDNN latest build from cache
         uses: actions/cache@v4
         with:
-          path: build/cov-int.tgz
+          path: build.tgz
           key: oneDNN-cov-build-${{github.sha}}
           restore-keys: |
             oneDNN-cov-build-
 
-      # - name: Download Coverity Build Tool (linux64)
+      - name: Download Coverity Build Tool (linux64)
+        run: |
+          curl --fail https://scan.coverity.com/download/cxx/linux64 --output ${GITHUB_WORKSPACE}/cov-linux64-tool.tar.gz \
+            --data "token=${{secrets.COVERITY_TOKEN}}&project=${{env.COVERITY_PROJECT}}" || { echo "Download failed"; exit 1; }
+          mkdir cov-linux64-tool
+          tar -xzf cov-linux64-tool.tar.gz --strip 1 -C cov-linux64-tool
+
+      - name: Prepare and run Coverity incremental build
+        run: |
+          export CC=gcc
+          export CXX=g++
+          export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
+
+          if [ -f build.tgz ]; then
+              tar -xzf build.tgz
+              rm -f build.tgz
+          else
+              echo "❌ Build archive not found"
+              exit 1
+          fi
+
+          cd build
+          cmake ..
+          cov-build --dir cov-int --append cmake --build . --parallel $(nproc)
+
+      # - name: Run Coverity incremental analysis
       #   run: |
-      #     curl --fail https://scan.coverity.com/download/cxx/linux64 --output ${GITHUB_WORKSPACE}/cov-linux64-tool.tar.gz \
-      #       --data "token=${{secrets.COVERITY_TOKEN}}&project=${{env.COVERITY_PROJECT}}" || { echo "Download failed"; exit 1; }
-      #     mkdir cov-linux64-tool
-      #     tar -xzf cov-linux64-tool.tar.gz --strip 1 -C cov-linux64-tool
-
-      # - name: Prepare and run Coverity incremental build
-      #   run: |
-      #     export CC=gcc
-      #     export CXX=g++
-      #     export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
-
-      #     git fetch origin main
-      #     CHANGED_FILES=$(git diff --name-only origin/main...HEAD | grep '\.cpp\|\.c\|\.h')
-
-      #     if [ -z "$CHANGED_FILES" ]; then
-      #       echo "No changed files detected"
-      #       exit 0
-      #     else
-      #       echo "Changed files: $CHANGED_FILES"
-      #     fi
-
-      #     # cmake --graphviz=graph.dot .
-      #     TARGETS=""
-      #     for FILE in $CHANGED_FILES; do
-      #         T=$(ninja -t query "$FILE" | grep 'input' | awk '{print $2}')
-      #         TARGETS="$TARGETS $T"
-      #     done
-
-      #     TARGETS=$(echo "$TARGETS" | tr ' ' '\n' | sort -u | tr '\n' ' ')
-
-      #     if [ -z "$TARGETS" ]; then
-      #         echo "Failed to determine build targets"
-      #         exit 1
-      #     else
-      #       echo "Build targets: $TARGETS"
-      #     fi
-
-      #     # cov-build --dir cov-int --append make $TARGETS
-
-      #     # mkdir -p build && cd build
-      #     # cmake ..
-      #     # cov-build --dir cov-int cmake --build . --parallel $(nproc)
+      #     cd build
+      #     cov-analyze --dir cov-int --concurrency --security --enable-constraint-fpp --enable-fnptr --enable-virtual
+      #       --disable ASSERT_SIDE_EFFECT
+      #       --disable AUTO_CAUSES_COPY
+      #       --disable BAD_CHECK_OF_WAIT_COND
+      #       --disable BAD_SHIFT
+      #       --disable COPY_INSTEAD_OF_MOVE
+      #       --disable CUDA.COLLECTIVE_WARP_SHUFFLE_WIDTH
+      #       --disable CUDA.CUDEVICE_HANDLES
+      #       --disable CUDA.DEVICE_DEPENDENT
+      #       --disable CUDA.DEVICE_DEPENDENT_CALLBACKS
+      #       --disable CUDA.DIVERGENCE_AT_COLLECTIVE_OPERATION
+      #       --disable CUDA.ERROR_INTERFACE
+      #       --disable CUDA.ERROR_KERNEL_LAUNCH
+      #       --disable CUDA.FORK
+      #       --disable CUDA.INACTIVE_THREAD_AT_COLLECTIVE_WARP
+      #       --disable CUDA.INITIATION_OBJECT_DEVICE_THREAD_BLOCK
+      #       --disable CUDA.INVALID_MEMORY_ACCESS
+      #       --disable CUDA.SHARE_FUNCTION
+      #       --disable CUDA.SHARE_OBJECT_STREAM_ASSOCIATED
+      #       --disable CUDA.SPECIFIERS_INCONSISTENCY
+      #       --disable CUDA.SYNCHRONIZE_TERMINATION
+      #       --disable INEFFICIENT_RESERVE
+      #       --disable MISSING_COMMA
+      #       --disable MISSING_MOVE_ASSIGNMENT
+      #       --disable OVERLAPPING_COPY
+      #       --disable STREAM_FORMAT_STATE
+      #       --disable UNINTENDED_INTEGER_DIVISION
 
       - name: Post-run checks
         run: |
-          cd build
-          if [ -f cov-int.tgz ]; then
-              tar -xzf cov-int.tgz
-              find . -name "compile_commands.json"
-          else
-              echo "❌ Build archive not found"
-          fi
           ls -la
