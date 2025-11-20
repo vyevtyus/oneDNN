@@ -43,13 +43,13 @@ jobs:
         with:
           fetch-depth: 0
 
-      # - name: Restore oneDNN latest build from cache
-      #   uses: actions/cache@v4
-      #   with:
-      #     path: build.tar.gz
-      #     key: oneDNN-cov-build-${{github.sha}}
-      #     restore-keys: |
-      #       oneDNN-cov-build-
+      - name: Restore oneDNN latest build from cache
+        uses: actions/cache@v4
+        with:
+          path: build/cov-int.tgz
+          key: oneDNN-cov-build-${{github.sha}}
+          restore-keys: |
+            oneDNN-cov-build-
 
       # - name: Download Coverity Build Tool (linux64)
       #   run: |
@@ -58,47 +58,46 @@ jobs:
       #     mkdir cov-linux64-tool
       #     tar -xzf cov-linux64-tool.tar.gz --strip 1 -C cov-linux64-tool
 
-      - name: Prepare and run Coverity incremental build
-        run: |
-          export CC=gcc
-          export CXX=g++
-          export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
+      # - name: Prepare and run Coverity incremental build
+      #   run: |
+      #     export CC=gcc
+      #     export CXX=g++
+      #     export PATH="${PWD}/cov-linux64-tool/bin:${PATH}"
 
-          git fetch origin main
-          CHANGED_FILES=$(git diff --name-only origin/main...HEAD | grep '\.cpp\|\.c\|\.h')
+      #     git fetch origin main
+      #     CHANGED_FILES=$(git diff --name-only origin/main...HEAD | grep '\.cpp\|\.c\|\.h')
 
-          if [ -z "$CHANGED_FILES" ]; then
-            echo "No changed files detected"
-            exit 0
-          else
-            echo "Changed files: $CHANGED_FILES"
-          fi
+      #     if [ -z "$CHANGED_FILES" ]; then
+      #       echo "No changed files detected"
+      #       exit 0
+      #     else
+      #       echo "Changed files: $CHANGED_FILES"
+      #     fi
 
-          cmake --graphviz=graph.dot .
-          TARGETS=""
-          for FILE in $CHANGED_FILES; do
-              T=$(ninja -t query "$FILE" | grep 'input' | awk '{print $2}')
-              TARGETS="$TARGETS $T"
-          done
+      #     # cmake --graphviz=graph.dot .
+      #     TARGETS=""
+      #     for FILE in $CHANGED_FILES; do
+      #         T=$(ninja -t query "$FILE" | grep 'input' | awk '{print $2}')
+      #         TARGETS="$TARGETS $T"
+      #     done
 
-          TARGETS=$(echo "$TARGETS" | tr ' ' '\n' | sort -u | tr '\n' ' ')
+      #     TARGETS=$(echo "$TARGETS" | tr ' ' '\n' | sort -u | tr '\n' ' ')
 
-          if [ -z "$TARGETS" ]; then
-              echo "Fialed to determine build targets"
-              exit 1
-          else
-            echo "Build targets: $TARGETS"
-          fi
+      #     if [ -z "$TARGETS" ]; then
+      #         echo "Failed to determine build targets"
+      #         exit 1
+      #     else
+      #       echo "Build targets: $TARGETS"
+      #     fi
 
-          # cov-build --dir cov-int --append make $TARGETS
+      #     # cov-build --dir cov-int --append make $TARGETS
 
-          # mkdir -p build && cd build
-          # cmake ..
-          # cov-build --dir cov-int cmake --build . --parallel $(nproc)
+      #     # mkdir -p build && cd build
+      #     # cmake ..
+      #     # cov-build --dir cov-int cmake --build . --parallel $(nproc)
 
       - name: Post-run checks
         run: |
-          ls -la .
           if [ -f cov-int.tgz ]; then
               tar -xzf cov-int.tgz
           else
