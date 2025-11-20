@@ -101,6 +101,7 @@ jobs:
           cd build
           if [ -f cov-int.tgz ]; then
               tar -xzf cov-int.tgz
+              find . -name "compile_commands.json"
           else
               echo "❌ Build archive not found"
           fi
